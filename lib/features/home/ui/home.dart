@@ -111,7 +111,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
             return Scaffold(
               extendBodyBehindAppBar: true,
               extendBody: true,
-              appBar: isTablet && isLandscape
+              appBar: isTablet
                   ? PreferredSize(
                       preferredSize: Size.fromHeight(40.0),
                       child: AppBar(
@@ -119,7 +119,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
                         elevation: 0,
                       ),
                     )
-                  : (!isLandscape ? ListTimersAppBar() : null),
+                  : (!isLandscape && !isTablet ? ListTimersAppBar() : null),
               body: isLandscape || isTablet
                   ? Row(
                       children: [
@@ -135,7 +135,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
                   : SafeArea(
                       child: _buildTimerList(timers),
                     ),
-              bottomNavigationBar: !isLandscape
+              bottomNavigationBar: !isLandscape && !isTablet
                   ? SafeArea(
                       top: false,
                       child: _buildBottomNavBar(timers),
