@@ -6,7 +6,6 @@ import 'package:openhiit/core/db/repositories/timer_repository.dart';
 import 'package:openhiit/core/db/repositories/timer_sound_settings_repository.dart';
 import 'package:openhiit/core/db/repositories/timer_time_settings_repository.dart';
 import 'package:openhiit/core/logs/logs.dart';
-import 'package:openhiit/core/providers/interval_provider/interval_provider.dart';
 import 'package:openhiit/core/providers/timer_provider/migrations/migration_1.dart';
 import 'package:openhiit/core/providers/timer_provider/migrations/migration_2.dart';
 import 'package:openhiit/core/models/timer_type.dart';
@@ -35,12 +34,6 @@ class TimerProvider extends ChangeNotifier {
       TimerTimeSettingsRepository();
   final TimerSoundSettingsRepository _timerSoundSettingsRepository =
       TimerSoundSettingsRepository();
-
-  late IntervalProvider _intervalProvider;
-
-  void setIntervalProvider(IntervalProvider provider) {
-    _intervalProvider = provider;
-  }
 
   Future<List<TimerType>> loadTimers() async {
     _isLoading = true;
@@ -142,7 +135,7 @@ class TimerProvider extends ChangeNotifier {
           .updateSoundSettings(timer.soundSettings);
       Log.debug(
           "Updated $soundSettingsRowsUpdated rows in timer_sound_settings table.");
-      await _intervalProvider.deleteIntervals(timer.id);
+      await _intervalRepository.deleteIntervalsByTimerId(timer.id);
       await pushIntervalsFromTimer(timer);
       Log.info("Timer with id ${timer.id} updated.");
       notifyListeners();
@@ -160,7 +153,6 @@ class TimerProvider extends ChangeNotifier {
     try {
       if (intervals.isNotEmpty) {
         await _intervalRepository.insertIntervals(intervals);
-        _intervalProvider.setIntervals(intervals);
         notifyListeners();
       }
     } catch (error) {
@@ -179,7 +171,7 @@ class TimerProvider extends ChangeNotifier {
         .deleteTimeSettings(timer.timeSettings.id);
     await _timerSoundSettingsRepository
         .deleteSoundSettings(timer.soundSettings.id);
-    await _intervalProvider.deleteIntervals(timer.id);
+    await _intervalRepository.deleteIntervalsByTimerId(timer.id);
     await updateTimerOrder(_timers);
     notifyListeners();
   }

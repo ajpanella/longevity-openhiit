@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:openhiit/core/providers/interval_provider/interval_provider.dart';
 import 'package:openhiit/core/providers/timer_creation_provider/timer_creation_provider.dart';
 import 'package:openhiit/core/providers/theme_provider/theme_provider.dart';
 import 'package:openhiit/features/home/ui/home.dart';
@@ -63,13 +62,8 @@ class WorkoutTimer extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider<IntervalProvider>(
-            create: (_) => IntervalProvider(),
-          ),
-          ChangeNotifierProxyProvider<IntervalProvider, TimerProvider>(
+          ChangeNotifierProvider<TimerProvider>(
             create: (_) => TimerProvider(),
-            update: (_, intervalProvider, timerProvider) =>
-                timerProvider!..setIntervalProvider(intervalProvider),
           ),
           ChangeNotifierProvider(create: (_) => TimerCreationProvider()),
         ],
