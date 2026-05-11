@@ -24,14 +24,13 @@ class ListTimersPage extends StatefulWidget {
 
 class _ListTimersPageState extends State<ListTimersPage> {
   late TimerProvider timerProvider;
-  late Future<List<TimerType>> _loadTimersFuture;
 
   @override
   void initState() {
     super.initState();
     Log.info("ListTimersPage opened");
-    timerProvider = Provider.of<TimerProvider>(context, listen: false);
-    _refreshTimers();
+    timerProvider = context.read<TimerProvider>();
+    timerProvider.loadTimers();
     _handleWhatsNew();
   }
 
@@ -39,19 +38,6 @@ class _ListTimersPageState extends State<ListTimersPage> {
     final size = MediaQuery.of(context).size;
     // 600 is a common breakpoint for tablets.
     return size.shortestSide >= 600;
-  }
-
-  void _refreshTimers() {
-    Log.info("refreshing timer list");
-    setState(() {
-      _loadTimersFuture = timerProvider.loadTimers().then((timers) {
-        Log.debug("loaded ${timers.length} timers");
-        return timers;
-      }).catchError((e) {
-        Log.error("timer load failed", e);
-        return <TimerType>[];
-      });
-    });
   }
 
   Future<void> _handleWhatsNew() async {
@@ -80,24 +66,24 @@ class _ListTimersPageState extends State<ListTimersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<TimerType>>(
-      future: _loadTimersFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return Consumer<TimerProvider>(
+      builder: (context, timerProvider, _) {
+        if (timerProvider.isLoading) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (snapshot.hasError) {
-          Log.error("error fetching timers: ${snapshot.error}");
+        if (timerProvider.error != null) {
+          Log.error("error fetching timers: ${timerProvider.error}");
           return Scaffold(
-            body:
-                Center(child: Text('Error fetching timers: ${snapshot.error}')),
+            body: Center(
+              child: Text('Error fetching timers: ${timerProvider.error}'),
+            ),
           );
         }
 
-        final timers = snapshot.data ?? [];
+        final timers = timerProvider.timers;
         Log.debug("building ListTimersPage with ${timers.length} timers");
 
         return LayoutBuilder(
@@ -176,7 +162,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
       onReorderCompleted: (reorderedItems) {},
       onListEmpty: (timer) {
         Log.info("deleted timer '${timer.name}'");
-        _refreshTimers();
+        timerProvider.loadTimers();
       },
       onTap: (timer) {
         Log.info("editing timer '${timer.name}'");
@@ -186,7 +172,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
           MaterialPageRoute(builder: (context) => EditTimer(editing: true)),
         ).then((_) {
           Log.debug("returned from edit timer screen, now refreshing timers");
-          _refreshTimers();
+          timerProvider.loadTimers();
         });
       },
     );
@@ -224,7 +210,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
             Log.info("import timers initiated");
             await onImportPressed(context, timerProvider);
             Log.debug("import completed, refreshing timers");
-            _refreshTimers();
+            timerProvider.loadTimers();
           },
         ),
         const Spacer(),
@@ -246,7 +232,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
             ).then((_) {
               Log.debug(
                   "returned from edit timer screen, now refreshing timers");
-              _refreshTimers();
+              timerProvider.loadTimers();
             });
           },
         ),
@@ -281,7 +267,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const EditTimer(editing: false)),
-                  ).then((_) => _refreshTimers());
+                  ).then((_) => timerProvider.loadTimers());
                 },
               ),
             ),
@@ -312,7 +298,7 @@ class _ListTimersPageState extends State<ListTimersPage> {
                 verticalPadding: 8,
                 onPressed: () async {
                   await onImportPressed(context, timerProvider);
-                  _refreshTimers();
+                  timerProvider.loadTimers();
                 },
               ),
             ),

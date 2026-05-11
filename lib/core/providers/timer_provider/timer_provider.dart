@@ -20,6 +20,13 @@ class TimerProvider extends ChangeNotifier {
 
   List<TimerType> _timers = [];
   List<TimerType> get timers => _timers;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  Object? _error;
+  Object? get error => _error;
+
   final TimerRepository _timerRepository = TimerRepository();
 
   final IntervalRepository _intervalRepository = IntervalRepository();
@@ -36,6 +43,10 @@ class TimerProvider extends ChangeNotifier {
   }
 
   Future<List<TimerType>> loadTimers() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
       final workouts = await _workoutRepository.getAllWorkouts();
 
@@ -73,12 +84,14 @@ class TimerProvider extends ChangeNotifier {
         _timerSoundSettingsRepository,
       );
 
-      notifyListeners();
-
       return _timers;
     } catch (error, stackTrace) {
+      _error = error;
       Log.error("Error loading timers: $error\n$stackTrace");
-      rethrow; // rethrow so FutureBuilder sees it and shows error UI
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
