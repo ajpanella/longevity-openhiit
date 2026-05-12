@@ -35,6 +35,19 @@ class TimerProvider extends ChangeNotifier {
   final TimerSoundSettingsRepository _timerSoundSettingsRepository =
       TimerSoundSettingsRepository();
 
+  bool _initialized = false;
+
+  Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+
+    try {
+      await loadTimers();
+    } catch (_) {
+      // Error state is already set in loadTimers().
+    }
+  }
+
   Future<List<TimerType>> loadTimers() async {
     _isLoading = true;
     _error = null;

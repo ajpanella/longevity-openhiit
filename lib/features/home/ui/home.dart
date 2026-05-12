@@ -30,8 +30,11 @@ class _ListTimersPageState extends State<ListTimersPage> {
     super.initState();
     Log.info("ListTimersPage opened");
     timerProvider = context.read<TimerProvider>();
-    timerProvider.loadTimers();
-    _handleWhatsNew();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      timerProvider.initialize();
+      _handleWhatsNew();
+    });
   }
 
   bool _isTablet(BuildContext context) {
