@@ -245,6 +245,7 @@ class _EditTimerState extends State<EditTimer> with TickerProviderStateMixin {
       };
 
   ValueChanged<StartSaveState> get setButtonState => (StartSaveState state) {
+        if (!mounted) return;
         if (buttonState != state) {
           setState(() {
             buttonState = state;
